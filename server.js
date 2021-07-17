@@ -16,6 +16,9 @@ app.use(express.urlencoded({ extended: true }));
 initRoutes(app);
 
 let port = 8080;
+app.get('/', (req, res) => {
+    res.send(`Server running at port:${port}`);
+});
 app.listen(port, () => {
   console.log(`Running at localhost:${port}`);
 });

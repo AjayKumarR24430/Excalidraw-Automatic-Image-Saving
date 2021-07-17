@@ -4,13 +4,10 @@ const fs = require('fs');
 const upload = async (req, res) => {
   try {
     await uploadFile(req, res);
-
-    if (req.file == undefined) {
-      return res.status(400).send({ message: "Please upload a file!" });
-    }
+    console.log("request", req.files[0].filename)
 
     res.status(200).send({
-      message: "Uploaded the file successfully: " + req.file.originalname,
+      message: "Uploaded the file successfully: " + req.files[0].filename,
     });
   } catch (err) {
     if (err.code == "LIMIT_FILE_SIZE") {
@@ -19,7 +16,7 @@ const upload = async (req, res) => {
         });
     }
     res.status(500).send({
-      message: `Could not upload the file:  ${err}`,
+      message: `Could not upload the file: ${req.files[0].filename}. ${err}`,
     });
   }
 };
