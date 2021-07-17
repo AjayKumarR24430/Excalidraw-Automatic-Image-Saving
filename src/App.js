@@ -27,12 +27,32 @@ function toImage(state, elements){
     file = theBlob.slice(5,);
     // get the name of the blob file
     name = file.slice(22,);
-    console.log(file, name);
   })();
-  setTimeout(
-    function() {
-      console.log(file, name);
-    }, 5000);
+  // setTimeout(
+  //   function() {
+  //     console.log(file, name);
+  //   }, 5000);
+
+  const options = { 
+    method: 'post',
+    headers: {
+      'Accept': 'application/json, text/plain, */*',
+      'Content-Type': 'application/json'
+    },
+       body: JSON.stringify(file)
+  } 
+
+  fetch('http://localhost:8080/upload', options)
+    .then(response => {
+      console.log(response)        
+      if (response.ok) {
+        return response.json();
+      } else {
+          throw new Error('Something went wrong ...');
+        }
+    })
+    .then(data => console.log(data))
+    .catch(error => console.log(error ));
 }
 
 
@@ -184,7 +204,6 @@ export default function App() {
                   shouldAddWatermark
                 }
               });
-              console.log(window.URL.createObjectURL(blob));
               setBlobUrl(window.URL.createObjectURL(blob));
             }}
           >
