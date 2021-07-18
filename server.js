@@ -1,14 +1,21 @@
 const cors = require("cors");
+// Express is for building the Rest apis
 const express = require("express");
 const app = express();
 
 global.__basedir = __dirname;
 
 var corsOptions = {
-  origin: "http://localhost:3000"
+  origin: "localhost:3000"
 };
 
+// cors provides Express middleware to enable CORS with various options.
 app.use(cors(corsOptions));
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 const initRoutes = require("./src/routes/routes");
 

@@ -3,12 +3,17 @@ const fs = require('fs');
 
 const upload = async (req, res) => {
   try {
+    // use middleware function for file upload
     await uploadFile(req, res);
-    console.log("request", req.files[0].filename)
-
+    // console.log("request", req.files[0].filename)
+    //  return response with message
+    if(req.files[0].filename== undefined){
+      return res.status(400).send({ message: "Please upload a file!" });
+    }
     res.status(200).send({
       message: "Uploaded the file successfully: " + req.files[0].filename,
     });
+//  catch Multer error (in middleware function)
   } catch (err) {
     if (err.code == "LIMIT_FILE_SIZE") {
         return res.status(500).send({
@@ -16,11 +21,12 @@ const upload = async (req, res) => {
         });
     }
     res.status(500).send({
-      message: `Could not upload the file: ${req.files[0].filename}. ${err}`,
+      message: `Could not upload the file:  ${err}`,
     });
   }
 };
 
+// read all files in images folder, return list of files’ informationn (name, url)
 const getListFiles = (req, res) => {
   const directoryPath = __basedir + "/public/Images/";
 
@@ -45,6 +51,7 @@ const getListFiles = (req, res) => {
   });
 };
 
+// receives file name as input parameter, then uses Express res.download API to transfer the file at path (directory + file name) as an ‘attachment’.
 const download = (req, res) => {
   const fileName = req.params.name;
   const directoryPath = __basedir + "/public/Images/";

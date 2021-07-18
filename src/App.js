@@ -4,57 +4,6 @@ import Excalidraw, {
 } from "@excalidraw/excalidraw";
 import "./styles.scss";
 
-function toImage(state, elements){
-  const excalidrawDiagram = {
-    type: "excalidraw",
-    version: 2,
-    source: "https://excalidraw.com",
-    elements: elements,
-    appState: state,
-  };
-  var theBlob, file, name;
-  
-  // Export the Excalidraw diagram as PNG Blob URL
-  (async () => {
-    const blob = await exportToBlob({
-      ...excalidrawDiagram,
-      mimeType: "image/png",
-    });
-  
-    const urlCreator = window.URL || window.webkitURL;
-    theBlob = urlCreator.createObjectURL(blob);
-    // get the file path
-    file = theBlob.slice(5,);
-    // get the name of the blob file
-    name = file.slice(22,);
-  })();
-  // setTimeout(
-  //   function() {
-  //     console.log(file, name);
-  //   }, 5000);
-
-  const options = { 
-    method: 'post',
-    headers: {
-      'Accept': 'application/json, text/plain, */*',
-      'Content-Type': 'application/json'
-    },
-       body: JSON.stringify(file)
-  } 
-
-  fetch('http://localhost:8080/upload', options)
-    .then(response => {
-      console.log(response)        
-      if (response.ok) {
-        return response.json();
-      } else {
-          throw new Error('Something went wrong ...');
-        }
-    })
-    .then(data => console.log(data))
-    .catch(error => console.log(error ));
-}
-
 
 export default function App() {
   const excalidrawRef = useRef(null);
@@ -67,6 +16,7 @@ export default function App() {
   const [exportWithDarkMode, setExportWithDarkMode] = useState(false);
   const [shouldAddWatermark, setShouldAddWatermark] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [lastUpdated, setLastUpdated] = useState(0);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -137,14 +87,43 @@ export default function App() {
         <div className="excalidraw-wrapper">
           <Excalidraw
             ref={excalidrawRef}
-            onChange={(elements, state) =>{
-              // console.log("Elements :", elements, "State : ", state)
-              setTimeout(
-                function() {
-                  toImage(state, elements);
-                }, 5000);              
-            }
-            }
+            onChange={async (elements, state) =>{
+              var d = new Date()
+              // console.log("Elements :", elements, "State : ", state) 
+              // console.log(d)
+              const interval = 10 * 1000;
+
+              if(d.getTime() - lastUpdated >= interval){
+                const blob = await exportToBlob({
+                  elements: excalidrawRef.current.getSceneElements(),
+                  mimeType: "image/png",
+                });
+                console.log(blob)
+                setBlobUrl(window.URL.createObjectURL(blob));
+                setLastUpdated(d.getTime())
+                if(blobUrl == null){
+                  console.log("Blob Url empty")
+                  return
+                }
+                console.log(blobUrl)
+                console.log(lastUpdated)
+                var filename = blobUrl + '.png'
+  
+                var formdata = new FormData();
+                formdata.append("", blob, filename);
+  
+                var requestOptions = {
+                  method: 'POST',
+                  body: formdata,
+                  redirect: 'follow'
+                };
+  
+                fetch("http://localhost:8080/upload", requestOptions)
+                  .then(response => response.text())
+                  .then(result => console.log(result))
+                  .catch(error => console.log('error', error));
+              }
+            }}
             onPointerUpdate={(payload) => console.log(payload)}
             onCollabButtonClick={() =>
               window.alert("You clicked on collab button")
@@ -214,7 +193,7 @@ export default function App() {
           </div>
 
           <button
-            onClick={() => {
+            onClick={async () => {
               const canvas = exportToCanvas({
                 elements: excalidrawRef.current.getSceneElements(),
                 appState: {
@@ -224,8 +203,9 @@ export default function App() {
               });
               const ctx = canvas.getContext("2d");
               ctx.font = "30px Virgil";
-              ctx.strokeText("My custom text", 50, 60);
+              // ctx.strokeText("My custom text", 50, 60);
               setCanvasUrl(canvas.toDataURL());
+          
             }}
           >
             Export to Canvas
